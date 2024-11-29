@@ -39,7 +39,7 @@ fn tokenize(expr: String) -> Vec<String> {
         .collect()
 }
 
-fn parse<'a>(tokens: &'a [String]) -> Result<(RispExp, &'a [String]), RispErr> {
+fn parse(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
     let (token, rest) = tokens
         .split_first()
         .ok_or(RispErr::Reason("could not get token".to_string()))?;
@@ -50,7 +50,7 @@ fn parse<'a>(tokens: &'a [String]) -> Result<(RispExp, &'a [String]), RispErr> {
     }
 }
 
-fn read_seq<'a>(tokens: &'a [String]) -> Result<(RispExp, &'a [String]), RispErr> {
+fn read_seq(tokens: &[String]) -> Result<(RispExp, &[String]), RispErr> {
     let mut res: Vec<RispExp> = vec![];
     let mut xs = tokens;
     loop {
@@ -60,7 +60,7 @@ fn read_seq<'a>(tokens: &'a [String]) -> Result<(RispExp, &'a [String]), RispErr
         if next_token == ")" {
             return Ok((RispExp::List(res), rest)); // skip `)`, head to the token after
         }
-        let (exp, new_xs) = parse(&xs)?;
+        let (exp, new_xs) = parse(xs)?;
         res.push(exp);
         xs = new_xs;
     }
@@ -103,7 +103,7 @@ fn default_env() -> RispEnv {
 }
 
 fn parse_list_of_floats(args: &[RispExp]) -> Result<Vec<f64>, RispErr> {
-    args.iter().map(|x| parse_single_float(x)).collect()
+    args.iter().map(parse_single_float).collect()
 }
 
 fn parse_single_float(exp: &RispExp) -> Result<f64, RispErr> {
@@ -119,7 +119,7 @@ fn eval(exp: &RispExp, env: &mut RispEnv) -> Result<RispExp, RispErr> {
             .data
             .get(k)
             .ok_or(RispErr::Reason(format!("unexpected symbol k='{}'", k)))
-            .map(|x| x.clone()),
+            .cloned(),
         RispExp::Number(_a) => Ok(exp.clone()),
         RispExp::List(list) => {
             let first_form = list
